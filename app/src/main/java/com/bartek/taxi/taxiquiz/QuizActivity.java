@@ -8,14 +8,18 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import com.bartek.taxi.taxiquiz.db.DbHelper;
 import com.bartek.taxi.taxiquiz.entity.DAO;
+import com.bartek.taxi.taxiquiz.entity.ExamScore;
 import com.bartek.taxi.taxiquiz.entity.InputLine;
 import com.bartek.taxi.taxiquiz.entity.Question;
 import com.bartek.taxi.taxiquiz.entity.QuestionFactory;
 import com.bartek.taxi.taxiquiz.entity.Score;
 import com.bartek.taxi.taxiquiz.entity.Scorer;
 import com.bartek.taxi.taxiquiz.fragment.QuestionFragment;
+import com.j256.ormlite.dao.Dao;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +33,7 @@ public class QuizActivity extends Activity {
     private static final String ERRORS_LIMIT = "errorLimit";
 
     private boolean quizALive = true;
+    private long startDate;
 
     public static void start(Context context, int size, int errorLimit, boolean random) {
         Intent starter = new Intent(context, QuizActivity.class);
@@ -79,6 +84,7 @@ public class QuizActivity extends Activity {
         }
 
         btnNext.setOnClickListener(v -> onNextQuestion());
+        startDate = System.currentTimeMillis();
         onNextQuestion();
     }
 
@@ -110,6 +116,7 @@ public class QuizActivity extends Activity {
 
     private void onFinish() {
         quizALive = false;
+        storeScore();
 
         if (wrongAnswers > errorsLimit) {
             onGameOver();
@@ -120,6 +127,15 @@ public class QuizActivity extends Activity {
                     .setMessage("Gratuluje! Trenuj dalej!")
                     .create()
                     .show();
+        }
+    }
+
+    private void storeScore() {
+        try {
+            Dao<ExamScore, String> store = DbHelper.getInstance(this).getDao(ExamScore.class);
+            store.create(new ExamScore(questions.size(), correctAnswers, startDate, System.currentTimeMillis()));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 

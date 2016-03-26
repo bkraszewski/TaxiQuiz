@@ -1,6 +1,5 @@
 package com.bartek.taxi.taxiquiz;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Address;
@@ -39,11 +38,12 @@ public class MapActivity extends AppCompatActivity {
         MapFragment fragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         fragment.getMapAsync(googleMap -> onReady(googleMap));
 
-        setTitle(street);
 
-        if (getActionBar() != null) {
-            getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+        setTitle(street);
     }
 
     @Override
