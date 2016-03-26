@@ -14,7 +14,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         findViewById(R.id.learn).setOnClickListener(v ->
-                startActivity(new Intent(this, QuizActivity.class))
+                QuizActivity.start(this)
+        );
+
+        findViewById(R.id.quiz).setOnClickListener(v ->
+                QuizActivity.start(this, 12, 2, true)
         );
     }
 

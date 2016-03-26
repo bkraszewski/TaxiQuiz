@@ -31,7 +31,7 @@ public class MockDao implements DAO {
     }
 
     @Override
-    public List<InputLine> getAllQuestions() {
+    public List<InputLine> getAllQuestions(boolean isRandom) {
 
         InputLine line1 = new InputLine();
         line1.street = "Złota";
@@ -43,5 +43,10 @@ public class MockDao implements DAO {
         line2.district = "Srodmiescie";
         line2.connectedStreets = Arrays.asList("Lipowa", "Aleja");
         return Arrays.asList(line1, line2);
+    }
+
+    @Override
+    public List<InputLine> getQuestions(int size, boolean isRandom) {
+        return null;
     }
 }

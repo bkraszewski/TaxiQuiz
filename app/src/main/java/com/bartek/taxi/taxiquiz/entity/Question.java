@@ -10,8 +10,10 @@ public class Question implements Serializable {
 
     public List<String>districts;
     public List<List<String>>connections;
+    public Object id;
 
     public Question(InputLine line) {
+        id = line.id;
         street = line.street;
         correctDistrict = line.district;
         correctConnections = line.connectedStreets;

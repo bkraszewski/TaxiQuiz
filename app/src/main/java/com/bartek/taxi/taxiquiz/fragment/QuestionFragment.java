@@ -135,11 +135,7 @@ public class QuestionFragment extends Fragment {
 
     public void enableMap() {
         btnMap.setVisibility(View.VISIBLE);
-        btnMap.setOnClickListener(v -> {
-            MapFragmentDialog dialog = MapFragmentDialog.newInstance(question.street);
-            dialog.show(getActivity().getFragmentManager(), TAG);
-        });
-
+        btnMap.setOnClickListener(v -> listener.showMap(question));
         btnCheck.setEnabled(false);
     }
 
@@ -227,6 +223,8 @@ public class QuestionFragment extends Fragment {
 
     public interface OnQuestionSubmitedListener {
         void onQuestionSubmited(Question question, int firstAnswer, int secondAnswer);
+
+        void showMap(Question question);
     }
 
 }
