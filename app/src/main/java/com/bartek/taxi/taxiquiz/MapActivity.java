@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class MapActivity extends AppCompatActivity {
-    private static final String STREET = "street";
+    private static final String STREET = "place";
     private String street;
 
 

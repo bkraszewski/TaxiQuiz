@@ -14,8 +14,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bartek.taxi.taxiquiz.R;
-import com.bartek.taxi.taxiquiz.entity.Question;
-import com.bartek.taxi.taxiquiz.entity.Score;
+import com.bartek.taxi.taxiquiz.entity.QuestionData;
 
 import java.util.List;
 
@@ -30,24 +29,18 @@ public class QuestionFragment extends Fragment {
     @InjectView(R.id.tvStreet)
     protected TextView tvStreet;
 
-    @InjectView(R.id.lvDistricts)
-    protected ListView lvDistricts;
-
-    @InjectView(R.id.lvStreets)
-    protected ListView lvStreets;
-
     @InjectView(R.id.btnCheck)
     protected Button btnCheck;
 
     @InjectView(R.id.btnMap)
     protected Button btnMap;
 
-    private int selectedDistrict = -1;
-    private int selectedStreet = -1;
+    @InjectView(R.id.questionContainer)
+    protected ViewGroup questionContainer;
 
     private OnQuestionSubmitedListener listener;
     private SelectionAdapter[] adapters;
-    private Question question;
+    private QuestionData question;
 
     public void setListener(OnQuestionSubmitedListener listener) {
         this.listener = listener;
@@ -66,7 +59,7 @@ public class QuestionFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         Bundle args = getArguments();
-        question = (Question) args.getSerializable(QUESTION);
+        question = (QuestionData) args.getSerializable(QUESTION);
 
         if (question != null) {
             initQuestions(question);
@@ -75,51 +68,55 @@ public class QuestionFragment extends Fragment {
         checkButtonEnabled();
         btnCheck.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onQuestionSubmited(question, selectedDistrict, selectedStreet);
+                listener.onQuestionSubmited(question);
             }
         });
     }
 
     public void checkButtonEnabled() {
-        btnCheck.setEnabled(selectedDistrict > -1 && selectedStreet > -1);
+        boolean enabled = true;
+
+        for (QuestionData.Question questionData : question.questions) {
+            enabled = enabled && questionData.userAnswer > -1;
+        }
+
+        btnCheck.setEnabled(enabled);
     }
 
-    private void initQuestions(final Question question) {
-        tvStreet.setText(question.street);
-        adapters = new SelectionAdapter[2];
-        adapters[0] = new SelectionAdapter(question.districts) {
+    private void initQuestions(final QuestionData question) {
+        tvStreet.setText(question.place);
+        adapters = new SelectionAdapter[question.questions.size()];
 
-            @Override
-            int getSelection() {
-                return selectedDistrict;
-            }
 
-            @Override
-            void setSelection(int selection) {
-                selectedDistrict = selection;
-                checkButtonEnabled();
-            }
-        };
+        int index = 0;
+        for (QuestionData.Question questionData : question.questions) {
+            View questionView = getActivity().getLayoutInflater().inflate( R.layout.view_question, questionContainer, false);
+            TextView text = (TextView) questionView.findViewById(R.id.question);
+            ListView lvAnswers = (ListView) questionView.findViewById(R.id.lvAnswer);
+            adapters[index] = new SelectionAdapter(questionData.answers) {
 
-        lvDistricts.setAdapter(adapters[0]);
-        adapters[1] = (new SelectionAdapter(question.connections) {
-            @Override
-            int getSelection() {
-                return selectedStreet;
-            }
+                @Override
+                int getSelection() {
+                    return questionData.userAnswer;
+                }
 
-            @Override
-            void setSelection(int selection) {
-                selectedStreet = selection;
-                checkButtonEnabled();
-            }
-        });
+                @Override
+                void setSelection(int selection) {
+                    questionData.userAnswer = selection;
+                    checkButtonEnabled();
+                }
+            };
 
-        lvStreets.setAdapter(adapters[1]);
+
+            text.setText(questionData.question);
+            lvAnswers.setAdapter(adapters[index]);
+            questionContainer.addView(questionView);
+            index++;
+        }
 
     }
 
-    public static QuestionFragment newInstance(Question question) {
+    public static QuestionFragment newInstance(QuestionData question) {
 
         Bundle args = new Bundle();
         args.putSerializable(QUESTION, question);
@@ -128,9 +125,12 @@ public class QuestionFragment extends Fragment {
         return fragment;
     }
 
-    public void showScore(Score score) {
-        adapters[0].markAnswers(score.firstOkAnswer, score.firstBadAnswer);
-        adapters[1].markAnswers(score.secondOkAnswer, score.secondBadAnswer);
+    public void showScore(QuestionData score) {
+
+        for (int i = 0; i < score.questions.size(); i++) {
+            QuestionData.Question data = score.questions.get(i);
+            adapters[i].markAnswers(data.okAnswer, data.wrongAnswer);
+        }
     }
 
     public void enableMap() {
@@ -222,9 +222,9 @@ public class QuestionFragment extends Fragment {
     }
 
     public interface OnQuestionSubmitedListener {
-        void onQuestionSubmited(Question question, int firstAnswer, int secondAnswer);
+        void onQuestionSubmited(QuestionData question);
 
-        void showMap(Question question);
+        void showMap(QuestionData question);
     }
 
 }

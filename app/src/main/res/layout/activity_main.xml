@@ -12,20 +12,46 @@
     tools:context="com.bartek.taxi.taxiquiz.MainActivity">
 
     <TextView
-        android:id="@+id/learn"
+        android:id="@+id/learnStreets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:padding="20dp"
-        android:text="Ucz sie" />
+        android:text="Ucz sie (ulice)" />
 
     <TextView
-        android:id="@+id/quiz"
+        android:id="@+id/quizStreets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:padding="20dp"
-        android:text="Egzamin" />
+        android:text="Egzamin (ulice)" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimary" />
+
+    <TextView
+        android:id="@+id/learnPlaces"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:padding="20dp"
+        android:text="Ucz sie (instytucje)" />
+
+    <TextView
+        android:id="@+id/quizPlaces"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:padding="20dp"
+        android:text="Egzamin (instytucje)" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/colorPrimary" />
 
     <TextView
         android:id="@+id/myScores"

@@ -9,14 +9,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.bartek.taxi.taxiquiz.db.DbHelper;
-import com.bartek.taxi.taxiquiz.entity.DAO;
 import com.bartek.taxi.taxiquiz.entity.ExamScore;
-import com.bartek.taxi.taxiquiz.entity.InputLine;
-import com.bartek.taxi.taxiquiz.entity.Question;
-import com.bartek.taxi.taxiquiz.entity.QuestionFactory;
-import com.bartek.taxi.taxiquiz.entity.Score;
-import com.bartek.taxi.taxiquiz.entity.Scorer;
+import com.bartek.taxi.taxiquiz.entity.QuestionData;
 import com.bartek.taxi.taxiquiz.fragment.QuestionFragment;
+import com.bartek.taxi.taxiquiz.model.QuestionFactory;
+import com.bartek.taxi.taxiquiz.model.Scorer;
 import com.j256.ormlite.dao.Dao;
 
 import java.sql.SQLException;
@@ -31,23 +28,25 @@ public class QuizActivity extends Activity {
     private static final String SIZE = "size";
     private static final String RANDOM = "random";
     private static final String ERRORS_LIMIT = "errorLimit";
+    private static final String TYPE = "type";
 
     private boolean quizALive = true;
     private long startDate;
 
-    public static void start(Context context, int size, int errorLimit, boolean random) {
+    public static void start(Context context, int size, int errorLimit, boolean random, QuestionFactory.Type type) {
         Intent starter = new Intent(context, QuizActivity.class);
         starter.putExtra(SIZE, size);
         starter.putExtra(RANDOM, random);
         starter.putExtra(ERRORS_LIMIT, errorLimit);
+        starter.putExtra(TYPE, type);
         context.startActivity(starter);
     }
 
-    public static void start(Context context) {
-        start(context, -1, Integer.MAX_VALUE, false);
+    public static void start(QuestionFactory.Type type, Context context) {
+        start(context, -1, Integer.MAX_VALUE, false, type);
     }
 
-    private List<InputLine> questions = new ArrayList<>();
+    private List<QuestionData> questions = new ArrayList<>();
 
     @InjectView(R.id.btnNext)
     protected View btnNext;
@@ -71,16 +70,16 @@ public class QuizActivity extends Activity {
 
         ButterKnife.inject(this);
 
-        DAO dao = DAO.Factory.create(this);
-
         boolean isRandom = getIntent().getBooleanExtra(RANDOM, false);
         errorsLimit = getIntent().getIntExtra(ERRORS_LIMIT, 0);
         int size = getIntent().getIntExtra(SIZE, -1);
+        QuestionFactory.Type type = (QuestionFactory.Type) getIntent().getSerializableExtra(TYPE);
+        QuestionFactory factory = QuestionFactory.getInstance();
 
         if (size == -1) {
-            questions = dao.getAllQuestions(isRandom);
+            questions = factory.getQuestions(type, isRandom);
         } else {
-            questions = dao.getQuestions(size, isRandom);
+            questions = factory.getQuestions(type, isRandom, size);
         }
 
         btnNext.setOnClickListener(v -> onNextQuestion());
@@ -148,7 +147,7 @@ public class QuizActivity extends Activity {
     }
 
     private void createQuestionForLine(int index) {
-        Question question = QuestionFactory.createQuestion(questions.get(index), this);
+        QuestionData question = questions.get(index);
         QuestionFragment fragment = QuestionFragment.newInstance(question);
         getFragmentManager()
                 .beginTransaction()
@@ -158,8 +157,8 @@ public class QuizActivity extends Activity {
         fragment.setListener(new QuestionFragment.OnQuestionSubmitedListener() {
 
             @Override
-            public void onQuestionSubmited(Question question, int firstAnswer, int secondAnswer) {
-                Score score = Scorer.calculateScore(question, firstAnswer, secondAnswer);
+            public void onQuestionSubmited(QuestionData question) {
+                QuestionData score = Scorer.calculateScore(question);
                 fragment.showScore(score);
                 fragment.enableMap();
                 btnNext.setEnabled(true);
@@ -168,14 +167,18 @@ public class QuizActivity extends Activity {
             }
 
             @Override
-            public void showMap(Question question) {
-                MapActivity.start(QuizActivity.this, question.street);
+            public void showMap(QuestionData question) {
+                MapActivity.start(QuizActivity.this, question.place);
             }
         });
     }
 
-    private void recalculateScore(Score score) {
-        if (score.firstBadAnswer == -1 && score.secondBadAnswer == -1) {
+    private void recalculateScore(QuestionData score) {
+        boolean correct = true;
+        for (QuestionData.Question question : score.questions) {
+            correct = correct && question.wrongAnswer == -1;
+        }
+        if (correct) {
             correctAnswers++;
         } else {
             wrongAnswers++;
